@@ -1,66 +1,68 @@
-
 `timescale 1 ns / 1 ps
 
+
+
 module axi_coefficient_memory #(
-    parameter integer S_AXI_ID_WIDTH   = 0 ,
-    parameter integer S_AXI_DATA_WIDTH = 32,
-    parameter integer S_AXI_ADDR_WIDTH = 8  
+    parameter integer S_AXI_ID_WIDTH   = 0  ,
+    parameter integer S_AXI_DATA_WIDTH = 32 ,
+    parameter integer S_AXI_ADDR_WIDTH = 18 ,
+    parameter integer FILTER_ORDER     = 256,
+    parameter integer FILTER_COUNT     = 24
 ) (
-    input  logic                            i_clk             ,
-    input  logic                            i_resetn          ,
+    input  logic                            i_clk         ,
+    input  logic                            i_resetn      ,
+    // external control
+    input  logic [    S_AXI_ADDR_WIDTH-1:0] addrb         ,
+    input  logic                            enb           ,
+    output logic [    S_AXI_DATA_WIDTH-1:0] doutb         ,
     // Coefficient AXI loading bus
-    input  logic                            S_AXI_ACLK        ,
-    input  logic                            S_AXI_ARESETN     ,
-    input  logic [      S_AXI_ID_WIDTH-1:0] S_AXI_AWID        ,
-    input  logic [    S_AXI_ADDR_WIDTH-1:0] S_AXI_AWADDR      ,
-    input  logic [                     7:0] S_AXI_AWLEN       ,
-    input  logic [                     2:0] S_AXI_AWSIZE      ,
-    input  logic [                     1:0] S_AXI_AWBURST     ,
-    input  logic                            S_AXI_AWLOCK      ,
-    input  logic [                     3:0] S_AXI_AWCACHE     ,
-    input  logic [                     2:0] S_AXI_AWPROT      ,
-    input  logic [                     3:0] S_AXI_AWQOS       ,
-    input  logic [                     3:0] S_AXI_AWREGION    ,
-    input  logic                            S_AXI_AWVALID     ,
-    output logic                            S_AXI_AWREADY     ,
-    input  logic [    S_AXI_DATA_WIDTH-1:0] S_AXI_WDATA       ,
-    input  logic [(S_AXI_DATA_WIDTH/8)-1:0] S_AXI_WSTRB       ,
-    input  logic                            S_AXI_WLAST       ,
-    input  logic                            S_AXI_WVALID      ,
-    output logic                            S_AXI_WREADY      ,
-    output logic [      S_AXI_ID_WIDTH-1:0] S_AXI_BID         ,
-    output logic [                     1:0] S_AXI_BRESP       ,
-    output logic                            S_AXI_BVALID      ,
-    input  logic                            S_AXI_BREADY      ,
-    input  logic [      S_AXI_ID_WIDTH-1:0] S_AXI_ARID        ,
-    input  logic [    S_AXI_ADDR_WIDTH-1:0] S_AXI_ARADDR      ,
-    input  logic [                     7:0] S_AXI_ARLEN       ,
-    input  logic [                     2:0] S_AXI_ARSIZE      ,
-    input  logic [                     1:0] S_AXI_ARBURST     ,
-    input  logic                            S_AXI_ARLOCK      ,
-    input  logic [                     3:0] S_AXI_ARCACHE     ,
-    input  logic [                     2:0] S_AXI_ARPROT      ,
-    input  logic [                     3:0] S_AXI_ARQOS       ,
-    input  logic [                     3:0] S_AXI_ARREGION    ,
-    input  logic                            S_AXI_ARVALID     ,
-    output logic                            S_AXI_ARREADY     ,
-    output logic [      S_AXI_ID_WIDTH-1:0] S_AXI_RID         ,
-    output logic [    S_AXI_DATA_WIDTH-1:0] S_AXI_RDATA       ,
-    output logic [                     1:0] S_AXI_RRESP       ,
-    output logic                            S_AXI_RLAST       ,
-    output logic                            S_AXI_RVALID      ,
-    input  logic                            S_AXI_RREADY      ,
-
-    input logic [S_AXI_ADDR_WIDTH-1:0] addrb,
-    input logic ena,
-    output logic [] data,
-
+    input  logic                            S_AXI_ACLK    ,
+    input  logic                            S_AXI_ARESETN ,
+    input  logic [      S_AXI_ID_WIDTH-1:0] S_AXI_AWID    ,
+    input  logic [    S_AXI_ADDR_WIDTH-1:0] S_AXI_AWADDR  ,
+    input  logic [                     7:0] S_AXI_AWLEN   ,
+    input  logic [                     2:0] S_AXI_AWSIZE  ,
+    input  logic [                     1:0] S_AXI_AWBURST ,
+    input  logic                            S_AXI_AWLOCK  ,
+    input  logic [                     3:0] S_AXI_AWCACHE ,
+    input  logic [                     2:0] S_AXI_AWPROT  ,
+    input  logic [                     3:0] S_AXI_AWQOS   ,
+    input  logic [                     3:0] S_AXI_AWREGION,
+    input  logic                            S_AXI_AWVALID ,
+    output logic                            S_AXI_AWREADY ,
+    input  logic [    S_AXI_DATA_WIDTH-1:0] S_AXI_WDATA   ,
+    input  logic [(S_AXI_DATA_WIDTH/8)-1:0] S_AXI_WSTRB   ,
+    input  logic                            S_AXI_WLAST   ,
+    input  logic                            S_AXI_WVALID  ,
+    output logic                            S_AXI_WREADY  ,
+    output logic [      S_AXI_ID_WIDTH-1:0] S_AXI_BID     ,
+    output logic [                     1:0] S_AXI_BRESP   ,
+    output logic                            S_AXI_BVALID  ,
+    input  logic                            S_AXI_BREADY  ,
+    input  logic [      S_AXI_ID_WIDTH-1:0] S_AXI_ARID    ,
+    input  logic [    S_AXI_ADDR_WIDTH-1:0] S_AXI_ARADDR  ,
+    input  logic [                     7:0] S_AXI_ARLEN   ,
+    input  logic [                     2:0] S_AXI_ARSIZE  ,
+    input  logic [                     1:0] S_AXI_ARBURST ,
+    input  logic                            S_AXI_ARLOCK  ,
+    input  logic [                     3:0] S_AXI_ARCACHE ,
+    input  logic [                     2:0] S_AXI_ARPROT  ,
+    input  logic [                     3:0] S_AXI_ARQOS   ,
+    input  logic [                     3:0] S_AXI_ARREGION,
+    input  logic                            S_AXI_ARVALID ,
+    output logic                            S_AXI_ARREADY ,
+    output logic [      S_AXI_ID_WIDTH-1:0] S_AXI_RID     ,
+    output logic [    S_AXI_DATA_WIDTH-1:0] S_AXI_RDATA   ,
+    output logic [                     1:0] S_AXI_RRESP   ,
+    output logic                            S_AXI_RLAST   ,
+    output logic                            S_AXI_RVALID  ,
+    input  logic                            S_AXI_RREADY
 );
 
-
+    localparam integer MEMORY_SIZE = S_AXI_DATA_WIDTH * FILTER_COUNT * FILTER_ORDER;
 
     localparam integer ADDR_LSB          = (S_AXI_DATA_WIDTH/32) + 1;
-    localparam integer OPT_MEM_ADDR_BITS = 5                        ;
+    localparam integer OPT_MEM_ADDR_BITS = 15                       ;
 
     typedef enum{
         RST_ST  , 
@@ -87,10 +89,8 @@ module axi_coefficient_memory #(
     logic        ar_wrap_en  ;
 
     logic [OPT_MEM_ADDR_BITS:0] addra;
-    logic [OPT_MEM_ADDR_BITS:0] addrb;
 
     logic [31:0] douta;
-    logic [31:0] doutb;
 
     logic [31:0] dina;
     logic [31:0] dinb = '{default:0};
@@ -99,7 +99,6 @@ module axi_coefficient_memory #(
     logic [ 3:0] web = '{default:0};
 
     logic ena;
-    logic enb;
 
     always_comb aw_wrap_size  = (S_AXI_DATA_WIDTH/8 * (axi_axlen));
     always_comb ar_wrap_size  = (S_AXI_DATA_WIDTH/8 * (axi_axlen));
@@ -410,7 +409,7 @@ module axi_coefficient_memory #(
 /////////////////////////////////////////////////////////////
 
 
-    always_comb addra = axi_addr[7:2];
+    always_comb addra = axi_addr[17:2];
     always_comb dina = S_AXI_WDATA;
 
     generate 
@@ -422,8 +421,8 @@ module axi_coefficient_memory #(
     always_comb ena = (current_state == WRITE_AXI_ST) || (current_state == READ_AXI_ST);
 
     xpm_memory_tdpram #(
-        .ADDR_WIDTH_A           (6              ),
-        .ADDR_WIDTH_B           (6              ),
+        .ADDR_WIDTH_A           (16             ),
+        .ADDR_WIDTH_B           (16             ),
         .AUTO_SLEEP_TIME        (0              ),
         .BYTE_WRITE_WIDTH_A     (8              ),
         .BYTE_WRITE_WIDTH_B     (8              ),
@@ -437,7 +436,7 @@ module axi_coefficient_memory #(
         .MEMORY_INIT_PARAM      ("0"            ),
         .MEMORY_OPTIMIZATION    ("true"         ),
         .MEMORY_PRIMITIVE       ("auto"         ),
-        .MEMORY_SIZE            (2048           ),
+        .MEMORY_SIZE            (MEMORY_SIZE    ),
         .MESSAGE_CONTROL        (0              ),
         .RAM_DECOMP             ("auto"         ),
         .READ_DATA_WIDTH_A      (32             ),
@@ -457,7 +456,7 @@ module axi_coefficient_memory #(
         .WRITE_DATA_WIDTH_B     (32             ),
         .WRITE_MODE_A           ("no_change"    ),
         .WRITE_MODE_B           ("no_change"    ),
-        .WRITE_PROTECT          (1              ) 
+        .WRITE_PROTECT          (1              )
     ) xpm_memory_tdpram_inst (
         .dbiterra      (              ),
         .dbiterrb      (              ),
