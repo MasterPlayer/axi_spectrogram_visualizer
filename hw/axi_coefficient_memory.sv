@@ -5,14 +5,14 @@
 module axi_coefficient_memory #(
     parameter integer S_AXI_ID_WIDTH   = 0  ,
     parameter integer S_AXI_DATA_WIDTH = 32 ,
-    parameter integer S_AXI_ADDR_WIDTH = 18 ,
+    parameter integer S_AXI_ADDR_WIDTH = 14 ,
     parameter integer FILTER_ORDER     = 256,
     parameter integer FILTER_COUNT     = 24
 ) (
     input  logic                            i_clk         ,
     input  logic                            i_resetn      ,
     // external control
-    input  logic [    S_AXI_ADDR_WIDTH-1:0] addrb         ,
+    input  logic [                    11:0] addrb         ,
     input  logic                            enb           ,
     output logic [    S_AXI_DATA_WIDTH-1:0] doutb         ,
     // Coefficient AXI loading bus
@@ -62,7 +62,7 @@ module axi_coefficient_memory #(
     localparam integer MEMORY_SIZE = S_AXI_DATA_WIDTH * FILTER_COUNT * FILTER_ORDER;
 
     localparam integer ADDR_LSB          = (S_AXI_DATA_WIDTH/32) + 1;
-    localparam integer OPT_MEM_ADDR_BITS = 15                       ;
+    localparam integer OPT_MEM_ADDR_BITS = 11                       ;
 
     typedef enum{
         RST_ST  , 
@@ -409,7 +409,7 @@ module axi_coefficient_memory #(
 /////////////////////////////////////////////////////////////
 
 
-    always_comb addra = axi_addr[17:2];
+    always_comb addra = axi_addr[13:2];
     always_comb dina = S_AXI_WDATA;
 
     generate 
@@ -421,8 +421,8 @@ module axi_coefficient_memory #(
     always_comb ena = (current_state == WRITE_AXI_ST) || (current_state == READ_AXI_ST);
 
     xpm_memory_tdpram #(
-        .ADDR_WIDTH_A           (16             ),
-        .ADDR_WIDTH_B           (16             ),
+        .ADDR_WIDTH_A           (12             ),
+        .ADDR_WIDTH_B           (12             ),
         .AUTO_SLEEP_TIME        (0              ),
         .BYTE_WRITE_WIDTH_A     (8              ),
         .BYTE_WRITE_WIDTH_B     (8              ),
@@ -436,7 +436,7 @@ module axi_coefficient_memory #(
         .MEMORY_INIT_PARAM      ("0"            ),
         .MEMORY_OPTIMIZATION    ("true"         ),
         .MEMORY_PRIMITIVE       ("auto"         ),
-        .MEMORY_SIZE            (MEMORY_SIZE    ),
+        .MEMORY_SIZE            (131072         ),
         .MESSAGE_CONTROL        (0              ),
         .RAM_DECOMP             ("auto"         ),
         .READ_DATA_WIDTH_A      (32             ),
@@ -467,7 +467,7 @@ module axi_coefficient_memory #(
         .addra         (addra         ),
         .addrb         (addrb         ),
         .clka          (S_AXI_ACLK    ),
-        .clkb          (S_AXI_ACLK    ),
+        .clkb          (i_clk         ),
         .dina          (dina          ),
         .dinb          (dinb          ),
         .ena           (ena           ),
@@ -479,7 +479,7 @@ module axi_coefficient_memory #(
         .regcea        (1'b1          ),
         .regceb        (1'b1          ),
         .rsta          (~S_AXI_ARESETN),
-        .rstb          (~S_AXI_ARESETN),
+        .rstb          (~i_resetn     ),
         .sleep         (1'b0          ),
         .wea           (wea           ),
         .web           (web           )
