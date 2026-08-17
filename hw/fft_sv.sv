@@ -1,22 +1,22 @@
 
 
 module fft_sv #(
-    parameter NFFT       = 1024,
-    parameter DATA_WIDTH = 16  ,
+    parameter NFFT       = 256,
+    parameter DATA_WIDTH = 16 ,
     parameter QFORMAT    = 15
 ) (
-    input  logic                        i_clk     ,
-    input  logic                        i_resetn  ,
+    input  logic                      i_clk     ,
+    input  logic                      i_resetn  ,
     // Input
     input  logic [  (DATA_WIDTH-1):0] i_tdata_re,
     input  logic [  (DATA_WIDTH-1):0] i_tdata_im,
-    input  logic                        i_tvalid  ,
-    output logic                        o_tready  ,
+    input  logic                      i_tvalid  ,
+    output logic                      o_tready  ,
     // Output
     output logic [  (DATA_WIDTH-1):0] o_tdata_re,
     output logic [  (DATA_WIDTH-1):0] o_tdata_im,
     output logic [($clog2(NFFT)-1):0] o_xk_index,
-    output logic                        o_tvalid
+    output logic                      o_tvalid
 );
 
     parameter C_BFU_LATENCY  = 13;
