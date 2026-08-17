@@ -1,3 +1,7 @@
+%% If needed generate data much than 16 bits - please fix output 
+%% instead %c%c%c%c insert required char numbers
+%% for example for 20 bits - insert %c%c%c%c%c
+%% for example for 32 bits - insert %c%c%c%c%c%c%c%c 
 clc;
 clear all;
 close all;
