@@ -1,0 +1,223 @@
+
+
+module axis_dds_x16 (
+    input  logic        i_clk        ,
+    input  logic        i_start      ,
+    input  logic [31:0] i_phase      ,
+    input  logic [31:0] i_pause      ,
+    output logic [15:0] m_axis_tdata ,
+    output logic        m_axis_tvalid
+);
+
+    logic  [0:1023][15:0] dds_memory = {
+        16'h0000, 16'h00C9, 16'h0192, 16'h025B, 16'h0324, 16'h03ED, 16'h04B6, 16'h057F, 
+        16'h0648, 16'h0711, 16'h07D9, 16'h08A2, 16'h096A, 16'h0A33, 16'h0AFB, 16'h0BC4, 
+        16'h0C8C, 16'h0D54, 16'h0E1C, 16'h0EE3, 16'h0FAB, 16'h1072, 16'h113A, 16'h1201, 
+        16'h12C8, 16'h138F, 16'h1455, 16'h151C, 16'h15E2, 16'h16A8, 16'h176E, 16'h1833, 
+        16'h18F9, 16'h19BE, 16'h1A82, 16'h1B47, 16'h1C0B, 16'h1CCF, 16'h1D93, 16'h1E57, 
+        16'h1F1A, 16'h1FDD, 16'h209F, 16'h2161, 16'h2223, 16'h22E5, 16'h23A6, 16'h2467, 
+        16'h2528, 16'h25E8, 16'h26A8, 16'h2767, 16'h2826, 16'h28E5, 16'h29A3, 16'h2A61, 
+        16'h2B1F, 16'h2BDC, 16'h2C99, 16'h2D55, 16'h2E11, 16'h2ECC, 16'h2F87, 16'h3041, 
+        16'h30FB, 16'h31B5, 16'h326E, 16'h3326, 16'h33DF, 16'h3496, 16'h354D, 16'h3604, 
+        16'h36BA, 16'h376F, 16'h3824, 16'h38D9, 16'h398C, 16'h3A40, 16'h3AF2, 16'h3BA5, 
+        16'h3C56, 16'h3D07, 16'h3DB8, 16'h3E68, 16'h3F17, 16'h3FC5, 16'h4073, 16'h4121, 
+        16'h41CE, 16'h427A, 16'h4325, 16'h43D0, 16'h447A, 16'h4524, 16'h45CD, 16'h4675, 
+        16'h471C, 16'h47C3, 16'h4869, 16'h490F, 16'h49B4, 16'h4A58, 16'h4AFB, 16'h4B9D, 
+        16'h4C3F, 16'h4CE0, 16'h4D81, 16'h4E20, 16'h4EBF, 16'h4F5D, 16'h4FFB, 16'h5097, 
+        16'h5133, 16'h51CE, 16'h5268, 16'h5302, 16'h539B, 16'h5432, 16'h54C9, 16'h5560, 
+        16'h55F5, 16'h568A, 16'h571D, 16'h57B0, 16'h5842, 16'h58D3, 16'h5964, 16'h59F3, 
+        16'h5A82, 16'h5B0F, 16'h5B9C, 16'h5C28, 16'h5CB3, 16'h5D3E, 16'h5DC7, 16'h5E4F, 
+        16'h5ED7, 16'h5F5D, 16'h5FE3, 16'h6068, 16'h60EB, 16'h616E, 16'h61F0, 16'h6271, 
+        16'h62F1, 16'h6370, 16'h63EE, 16'h646C, 16'h64E8, 16'h6563, 16'h65DD, 16'h6656, 
+        16'h66CF, 16'h6746, 16'h67BC, 16'h6832, 16'h68A6, 16'h6919, 16'h698B, 16'h69FD, 
+        16'h6A6D, 16'h6ADC, 16'h6B4A, 16'h6BB7, 16'h6C23, 16'h6C8E, 16'h6CF8, 16'h6D61, 
+        16'h6DC9, 16'h6E30, 16'h6E96, 16'h6EFB, 16'h6F5E, 16'h6FC1, 16'h7022, 16'h7083, 
+        16'h70E2, 16'h7140, 16'h719D, 16'h71F9, 16'h7254, 16'h72AE, 16'h7307, 16'h735E, 
+        16'h73B5, 16'h740A, 16'h745F, 16'h74B2, 16'h7504, 16'h7555, 16'h75A5, 16'h75F3, 
+        16'h7641, 16'h768D, 16'h76D8, 16'h7722, 16'h776B, 16'h77B3, 16'h77FA, 16'h783F, 
+        16'h7884, 16'h78C7, 16'h7909, 16'h794A, 16'h7989, 16'h79C8, 16'h7A05, 16'h7A41, 
+        16'h7A7C, 16'h7AB6, 16'h7AEE, 16'h7B26, 16'h7B5C, 16'h7B91, 16'h7BC5, 16'h7BF8, 
+        16'h7C29, 16'h7C59, 16'h7C88, 16'h7CB6, 16'h7CE3, 16'h7D0E, 16'h7D39, 16'h7D62, 
+        16'h7D89, 16'h7DB0, 16'h7DD5, 16'h7DFA, 16'h7E1D, 16'h7E3E, 16'h7E5F, 16'h7E7E, 
+        16'h7E9C, 16'h7EB9, 16'h7ED5, 16'h7EEF, 16'h7F09, 16'h7F21, 16'h7F37, 16'h7F4D, 
+        16'h7F61, 16'h7F74, 16'h7F86, 16'h7F97, 16'h7FA6, 16'h7FB4, 16'h7FC1, 16'h7FCD, 
+        16'h7FD8, 16'h7FE1, 16'h7FE9, 16'h7FF0, 16'h7FF5, 16'h7FF9, 16'h7FFD, 16'h7FFE, 
+        16'h7FFF, 16'h7FFE, 16'h7FFD, 16'h7FF9, 16'h7FF5, 16'h7FF0, 16'h7FE9, 16'h7FE1, 
+        16'h7FD8, 16'h7FCD, 16'h7FC1, 16'h7FB4, 16'h7FA6, 16'h7F97, 16'h7F86, 16'h7F74, 
+        16'h7F61, 16'h7F4D, 16'h7F37, 16'h7F21, 16'h7F09, 16'h7EEF, 16'h7ED5, 16'h7EB9, 
+        16'h7E9C, 16'h7E7E, 16'h7E5F, 16'h7E3E, 16'h7E1D, 16'h7DFA, 16'h7DD5, 16'h7DB0, 
+        16'h7D89, 16'h7D62, 16'h7D39, 16'h7D0E, 16'h7CE3, 16'h7CB6, 16'h7C88, 16'h7C59, 
+        16'h7C29, 16'h7BF8, 16'h7BC5, 16'h7B91, 16'h7B5C, 16'h7B26, 16'h7AEE, 16'h7AB6, 
+        16'h7A7C, 16'h7A41, 16'h7A05, 16'h79C8, 16'h7989, 16'h794A, 16'h7909, 16'h78C7, 
+        16'h7884, 16'h783F, 16'h77FA, 16'h77B3, 16'h776B, 16'h7722, 16'h76D8, 16'h768D, 
+        16'h7641, 16'h75F3, 16'h75A5, 16'h7555, 16'h7504, 16'h74B2, 16'h745F, 16'h740A, 
+        16'h73B5, 16'h735E, 16'h7307, 16'h72AE, 16'h7254, 16'h71F9, 16'h719D, 16'h7140, 
+        16'h70E2, 16'h7083, 16'h7022, 16'h6FC1, 16'h6F5E, 16'h6EFB, 16'h6E96, 16'h6E30, 
+        16'h6DC9, 16'h6D61, 16'h6CF8, 16'h6C8E, 16'h6C23, 16'h6BB7, 16'h6B4A, 16'h6ADC, 
+        16'h6A6D, 16'h69FD, 16'h698B, 16'h6919, 16'h68A6, 16'h6832, 16'h67BC, 16'h6746, 
+        16'h66CF, 16'h6656, 16'h65DD, 16'h6563, 16'h64E8, 16'h646C, 16'h63EE, 16'h6370, 
+        16'h62F1, 16'h6271, 16'h61F0, 16'h616E, 16'h60EB, 16'h6068, 16'h5FE3, 16'h5F5D, 
+        16'h5ED7, 16'h5E4F, 16'h5DC7, 16'h5D3E, 16'h5CB3, 16'h5C28, 16'h5B9C, 16'h5B0F, 
+        16'h5A82, 16'h59F3, 16'h5964, 16'h58D3, 16'h5842, 16'h57B0, 16'h571D, 16'h568A, 
+        16'h55F5, 16'h5560, 16'h54C9, 16'h5432, 16'h539B, 16'h5302, 16'h5268, 16'h51CE, 
+        16'h5133, 16'h5097, 16'h4FFB, 16'h4F5D, 16'h4EBF, 16'h4E20, 16'h4D81, 16'h4CE0, 
+        16'h4C3F, 16'h4B9D, 16'h4AFB, 16'h4A58, 16'h49B4, 16'h490F, 16'h4869, 16'h47C3, 
+        16'h471C, 16'h4675, 16'h45CD, 16'h4524, 16'h447A, 16'h43D0, 16'h4325, 16'h427A, 
+        16'h41CE, 16'h4121, 16'h4073, 16'h3FC5, 16'h3F17, 16'h3E68, 16'h3DB8, 16'h3D07, 
+        16'h3C56, 16'h3BA5, 16'h3AF2, 16'h3A40, 16'h398C, 16'h38D9, 16'h3824, 16'h376F, 
+        16'h36BA, 16'h3604, 16'h354D, 16'h3496, 16'h33DF, 16'h3326, 16'h326E, 16'h31B5, 
+        16'h30FB, 16'h3041, 16'h2F87, 16'h2ECC, 16'h2E11, 16'h2D55, 16'h2C99, 16'h2BDC, 
+        16'h2B1F, 16'h2A61, 16'h29A3, 16'h28E5, 16'h2826, 16'h2767, 16'h26A8, 16'h25E8, 
+        16'h2528, 16'h2467, 16'h23A6, 16'h22E5, 16'h2223, 16'h2161, 16'h209F, 16'h1FDD, 
+        16'h1F1A, 16'h1E57, 16'h1D93, 16'h1CCF, 16'h1C0B, 16'h1B47, 16'h1A82, 16'h19BE, 
+        16'h18F9, 16'h1833, 16'h176E, 16'h16A8, 16'h15E2, 16'h151C, 16'h1455, 16'h138F,
+        16'h12C8, 16'h1201, 16'h113A, 16'h1072, 16'h0FAB, 16'h0EE3, 16'h0E1C, 16'h0D54, 
+        16'h0C8C, 16'h0BC4, 16'h0AFB, 16'h0A33, 16'h096A, 16'h08A2, 16'h07D9, 16'h0711, 
+        16'h0648, 16'h057F, 16'h04B6, 16'h03ED, 16'h0324, 16'h025B, 16'h0192, 16'h00C9, 
+        16'h0000, 16'hFF37, 16'hFE6E, 16'hFDA5, 16'hFCDC, 16'hFC13, 16'hFB4A, 16'hFA81, 
+        16'hF9B8, 16'hF8EF, 16'hF827, 16'hF75E, 16'hF696, 16'hF5CD, 16'hF505, 16'hF43C, 
+        16'hF374, 16'hF2AC, 16'hF1E4, 16'hF11D, 16'hF055, 16'hEF8E, 16'hEEC6, 16'hEDFF, 
+        16'hED38, 16'hEC71, 16'hEBAB, 16'hEAE4, 16'hEA1E, 16'hE958, 16'hE892, 16'hE7CD, 
+        16'hE707, 16'hE642, 16'hE57E, 16'hE4B9, 16'hE3F5, 16'hE331, 16'hE26D, 16'hE1A9, 
+        16'hE0E6, 16'hE023, 16'hDF61, 16'hDE9F, 16'hDDDD, 16'hDD1B, 16'hDC5A, 16'hDB99, 
+        16'hDAD8, 16'hDA18, 16'hD958, 16'hD899, 16'hD7DA, 16'hD71B, 16'hD65D, 16'hD59F, 
+        16'hD4E1, 16'hD424, 16'hD367, 16'hD2AB, 16'hD1EF, 16'hD134, 16'hD079, 16'hCFBF, 
+        16'hCF05, 16'hCE4B, 16'hCD92, 16'hCCDA, 16'hCC21, 16'hCB6A, 16'hCAB3, 16'hC9FC, 
+        16'hC946, 16'hC891, 16'hC7DC, 16'hC727, 16'hC674, 16'hC5C0, 16'hC50E, 16'hC45B, 
+        16'hC3AA, 16'hC2F9, 16'hC248, 16'hC198, 16'hC0E9, 16'hC03B, 16'hBF8D, 16'hBEDF, 
+        16'hBE32, 16'hBD86, 16'hBCDB, 16'hBC30, 16'hBB86, 16'hBADC, 16'hBA33, 16'hB98B, 
+        16'hB8E4, 16'hB83D, 16'hB797, 16'hB6F1, 16'hB64C, 16'hB5A8, 16'hB505, 16'hB463, 
+        16'hB3C1, 16'hB320, 16'hB27F, 16'hB1E0, 16'hB141, 16'hB0A3, 16'hB005, 16'hAF69, 
+        16'hAECD, 16'hAE32, 16'hAD98, 16'hACFE, 16'hAC65, 16'hABCE, 16'hAB37, 16'hAAA0, 
+        16'hAA0B, 16'hA976, 16'hA8E3, 16'hA850, 16'hA7BE, 16'hA72D, 16'hA69C, 16'hA60D, 
+        16'hA57E, 16'hA4F1, 16'hA464, 16'hA3D8, 16'hA34D, 16'hA2C2, 16'hA239, 16'hA1B1, 
+        16'hA129, 16'hA0A3, 16'hA01D, 16'h9F98, 16'h9F15, 16'h9E92, 16'h9E10, 16'h9D8F, 
+        16'h9D0F, 16'h9C90, 16'h9C12, 16'h9B94, 16'h9B18, 16'h9A9D, 16'h9A23, 16'h99AA, 
+        16'h9931, 16'h98BA, 16'h9844, 16'h97CE, 16'h975A, 16'h96E7, 16'h9675, 16'h9603, 
+        16'h9593, 16'h9524, 16'h94B6, 16'h9449, 16'h93DD, 16'h9372, 16'h9308, 16'h929F, 
+        16'h9237, 16'h91D0, 16'h916A, 16'h9105, 16'h90A2, 16'h903F, 16'h8FDE, 16'h8F7D, 
+        16'h8F1E, 16'h8EC0, 16'h8E63, 16'h8E07, 16'h8DAC, 16'h8D52, 16'h8CF9, 16'h8CA2, 
+        16'h8C4B, 16'h8BF6, 16'h8BA1, 16'h8B4E, 16'h8AFC, 16'h8AAB, 16'h8A5B, 16'h8A0D, 
+        16'h89BF, 16'h8973, 16'h8928, 16'h88DE, 16'h8895, 16'h884D, 16'h8806, 16'h87C1, 
+        16'h877C, 16'h8739, 16'h86F7, 16'h86B6, 16'h8677, 16'h8638, 16'h85FB, 16'h85BF, 
+        16'h8584, 16'h854A, 16'h8512, 16'h84DA, 16'h84A4, 16'h846F, 16'h843B, 16'h8408, 
+        16'h83D7, 16'h83A7, 16'h8378, 16'h834A, 16'h831D, 16'h82F2, 16'h82C7, 16'h829E, 
+        16'h8277, 16'h8250, 16'h822B, 16'h8206, 16'h81E3, 16'h81C2, 16'h81A1, 16'h8182, 
+        16'h8164, 16'h8147, 16'h812B, 16'h8111, 16'h80F7, 16'h80DF, 16'h80C9, 16'h80B3, 
+        16'h809F, 16'h808C, 16'h807A, 16'h8069, 16'h805A, 16'h804C, 16'h803F, 16'h8033, 
+        16'h8028, 16'h801F, 16'h8017, 16'h8010, 16'h800B, 16'h8007, 16'h8003, 16'h8002, 
+        16'h8001, 16'h8002, 16'h8003, 16'h8007, 16'h800B, 16'h8010, 16'h8017, 16'h801F, 
+        16'h8028, 16'h8033, 16'h803F, 16'h804C, 16'h805A, 16'h8069, 16'h807A, 16'h808C, 
+        16'h809F, 16'h80B3, 16'h80C9, 16'h80DF, 16'h80F7, 16'h8111, 16'h812B, 16'h8147, 
+        16'h8164, 16'h8182, 16'h81A1, 16'h81C2, 16'h81E3, 16'h8206, 16'h822B, 16'h8250, 
+        16'h8277, 16'h829E, 16'h82C7, 16'h82F2, 16'h831D, 16'h834A, 16'h8378, 16'h83A7, 
+        16'h83D7, 16'h8408, 16'h843B, 16'h846F, 16'h84A4, 16'h84DA, 16'h8512, 16'h854A, 
+        16'h8584, 16'h85BF, 16'h85FB, 16'h8638, 16'h8677, 16'h86B6, 16'h86F7, 16'h8739, 
+        16'h877C, 16'h87C1, 16'h8806, 16'h884D, 16'h8895, 16'h88DE, 16'h8928, 16'h8973, 
+        16'h89BF, 16'h8A0D, 16'h8A5B, 16'h8AAB, 16'h8AFC, 16'h8B4E, 16'h8BA1, 16'h8BF6, 
+        16'h8C4B, 16'h8CA2, 16'h8CF9, 16'h8D52, 16'h8DAC, 16'h8E07, 16'h8E63, 16'h8EC0, 
+        16'h8F1E, 16'h8F7D, 16'h8FDE, 16'h903F, 16'h90A2, 16'h9105, 16'h916A, 16'h91D0, 
+        16'h9237, 16'h929F, 16'h9308, 16'h9372, 16'h93DD, 16'h9449, 16'h94B6, 16'h9524, 
+        16'h9593, 16'h9603, 16'h9675, 16'h96E7, 16'h975A, 16'h97CE, 16'h9844, 16'h98BA, 
+        16'h9931, 16'h99AA, 16'h9A23, 16'h9A9D, 16'h9B18, 16'h9B94, 16'h9C12, 16'h9C90, 
+        16'h9D0F, 16'h9D8F, 16'h9E10, 16'h9E92, 16'h9F15, 16'h9F98, 16'hA01D, 16'hA0A3, 
+        16'hA129, 16'hA1B1, 16'hA239, 16'hA2C2, 16'hA34D, 16'hA3D8, 16'hA464, 16'hA4F1, 
+        16'hA57E, 16'hA60D, 16'hA69C, 16'hA72D, 16'hA7BE, 16'hA850, 16'hA8E3, 16'hA976, 
+        16'hAA0B, 16'hAAA0, 16'hAB37, 16'hABCE, 16'hAC65, 16'hACFE, 16'hAD98, 16'hAE32, 
+        16'hAECD, 16'hAF69, 16'hB005, 16'hB0A3, 16'hB141, 16'hB1E0, 16'hB27F, 16'hB320, 
+        16'hB3C1, 16'hB463, 16'hB505, 16'hB5A8, 16'hB64C, 16'hB6F1, 16'hB797, 16'hB83D, 
+        16'hB8E4, 16'hB98B, 16'hBA33, 16'hBADC, 16'hBB86, 16'hBC30, 16'hBCDB, 16'hBD86, 
+        16'hBE32, 16'hBEDF, 16'hBF8D, 16'hC03B, 16'hC0E9, 16'hC198, 16'hC248, 16'hC2F9, 
+        16'hC3AA, 16'hC45B, 16'hC50E, 16'hC5C0, 16'hC674, 16'hC727, 16'hC7DC, 16'hC891, 
+        16'hC946, 16'hC9FC, 16'hCAB3, 16'hCB6A, 16'hCC21, 16'hCCDA, 16'hCD92, 16'hCE4B, 
+        16'hCF05, 16'hCFBF, 16'hD079, 16'hD134, 16'hD1EF, 16'hD2AB, 16'hD367, 16'hD424, 
+        16'hD4E1, 16'hD59F, 16'hD65D, 16'hD71B, 16'hD7DA, 16'hD899, 16'hD958, 16'hDA18, 
+        16'hDAD8, 16'hDB99, 16'hDC5A, 16'hDD1B, 16'hDDDD, 16'hDE9F, 16'hDF61, 16'hE023, 
+        16'hE0E6, 16'hE1A9, 16'hE26D, 16'hE331, 16'hE3F5, 16'hE4B9, 16'hE57E, 16'hE642, 
+        16'hE707, 16'hE7CD, 16'hE892, 16'hE958, 16'hEA1E, 16'hEAE4, 16'hEBAB, 16'hEC71, 
+        16'hED38, 16'hEDFF, 16'hEEC6, 16'hEF8E, 16'hF055, 16'hF11D, 16'hF1E4, 16'hF2AC, 
+        16'hF374, 16'hF43C, 16'hF505, 16'hF5CD, 16'hF696, 16'hF75E, 16'hF827, 16'hF8EF, 
+        16'hF9B8, 16'hFA81, 16'hFB4A, 16'hFC13, 16'hFCDC, 16'hFDA5, 16'hFE6E, 16'hFF37
+    };
+
+    typedef enum {
+        IDLE_ST , 
+        TX_DATA_ST, 
+        PAUSE_ST
+    } fsm;
+
+    fsm          current_state = IDLE_ST     ;
+    logic [31:0] pause_counter               ;
+    logic [31:0] phase_acc     = '{default:0};
+
+    always_ff @(posedge i_clk) begin : current_state_processing 
+        case (current_state)
+            IDLE_ST : 
+                if (i_start) begin 
+                    current_state <= TX_DATA_ST;
+                end else begin 
+                    current_state <= current_state;
+                end 
+
+            TX_DATA_ST : 
+                current_state <= PAUSE_ST;
+
+            PAUSE_ST : 
+                if (pause_counter == 0) begin 
+                    current_state <= IDLE_ST;
+                end else begin 
+                    current_state <= current_state;
+                end 
+
+            default : 
+                current_state <= current_state;
+
+        endcase // current_state
+    end 
+
+    always_ff @(posedge i_clk) begin : pause_counter_processing 
+        case (current_state)
+            PAUSE_ST : 
+                pause_counter <= pause_counter - 1;
+
+            default : 
+                pause_counter <= i_pause;
+        endcase // current_state
+    end 
+
+
+    always_ff @(posedge i_clk) begin : phase_acc_processing
+        case (current_state)
+            TX_DATA_ST : 
+                phase_acc <= phase_acc + i_phase;
+
+            default : 
+                phase_acc <= phase_acc;
+
+        endcase // current_state
+    end  
+
+
+    always_ff @(posedge i_clk) begin : m_axis_tdata_processing 
+        case (current_state)
+            TX_DATA_ST : 
+                m_axis_tdata <= dds_memory[phase_acc[31:22]];
+
+            default : 
+                m_axis_tdata <= m_axis_tdata;
+        endcase // current_state
+    end 
+
+
+    always_ff @(posedge i_clk) begin : m_axis_tvalid_processing 
+        case (current_state)
+            TX_DATA_ST :    
+                m_axis_tvalid <= 1'b1;
+
+            default : 
+                m_axis_tvalid <= 1'b0;
+        endcase // current_state
+    end     
+
+
+endmodule : axis_dds_x16
