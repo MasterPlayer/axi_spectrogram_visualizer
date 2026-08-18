@@ -23,12 +23,8 @@ module fft_magnitude_calculator #(
 
 
     always_ff @(posedge i_clk) begin
-        // tdata_re_pow2 <= $unsigned({{16{i_tdata_re[15]}}, i_tdata_re} * {{16{i_tdata_re[15]}}, i_tdata_re});
-        // tdata_im_pow2 <= $unsigned({{16{i_tdata_im[15]}}, i_tdata_im} * {{16{i_tdata_im[15]}}, i_tdata_im});
-
         tdata_re_pow2 <= $unsigned({{INPUT_WIDTH{i_tdata_re[INPUT_WIDTH-1]}}, i_tdata_re[INPUT_WIDTH-1:0]} * {{INPUT_WIDTH{i_tdata_re[INPUT_WIDTH-1]}}, i_tdata_re[INPUT_WIDTH-1:0]});
         tdata_im_pow2 <= $unsigned({{INPUT_WIDTH{i_tdata_im[INPUT_WIDTH-1]}}, i_tdata_im[INPUT_WIDTH-1:0]} * {{INPUT_WIDTH{i_tdata_im[INPUT_WIDTH-1]}}, i_tdata_im[INPUT_WIDTH-1:0]});
-
     end 
 
     always_ff @(posedge i_clk) begin : d_i_tvalid_processing 
