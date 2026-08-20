@@ -7,7 +7,7 @@ module fft_address_generator #(parameter NFFT = 5) (
     input  logic                      i_start        ,
     output logic                      o_done         ,
     // Memory Control
-    output logic                      o_wr_en        ,
+    output logic                      o_wren         ,
     // Output Address
     output logic [($clog2(NFFT)-1):0] o_raddr_mem_a  ,
     output logic [($clog2(NFFT)-1):0] o_raddr_mem_b  ,
@@ -188,12 +188,12 @@ module fft_address_generator #(parameter NFFT = 5) (
     end 
 
 
-    always_ff @(posedge i_clk, negedge i_resetn) begin : o_wr_en_processing 
-        if (~i_resetn) begin 
-            o_wr_en <= 1'b0;
-        end else begin 
-            o_wr_en <= (~(hold_reg | clear_reg)) & (~(hold | clear));
-        end 
+    always_ff @(posedge i_clk, negedge i_resetn) begin : o_wren_processing
+        if (~i_resetn) begin
+            o_wren <= 1'b0;
+        end else begin
+            o_wren <= (~(hold_reg | clear_reg)) & (~(hold | clear));
+        end
     end 
 
 
