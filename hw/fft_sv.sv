@@ -67,6 +67,7 @@ module fft_sv #(
         .i_resetn            (i_resetn            ),
         //
         .i_tvalid            (i_tvalid            ),
+        .o_tready            (o_tready            ),
         //
         .agu_done            (agu_done            ),
         .agu_wren            (agu_wren            ),

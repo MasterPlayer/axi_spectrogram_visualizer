@@ -9,8 +9,10 @@ module fft_control #(
     input  logic                    i_clk               ,
     input  logic                    i_resetn            ,
     input  logic                    i_tvalid            ,
+    output logic                    o_tready            ,
+
     input  logic                    agu_done            ,
-    input  logic                    agu_wren           ,
+    input  logic                    agu_wren            ,
     //
     output logic [$clog2(NFFT)-1:0] input_buffer_address,
     output logic                    input_buffer_tvalid ,
@@ -21,15 +23,17 @@ module fft_control #(
 
     typedef enum {
         IDLE_ST , 
-        FILL_BUFFER_ST, 
-        LOAD_UNLOAD_ST, 
-        RUN_ST, 
+        WRITE_BUFFER_ST, 
+        READ_BUFFER_ST, 
+        WORK_ST, 
         HOLD_ST
     } fsm;
 
     fsm current_state;
 
     logic d_agu_wren;
+
+    always_comb o_tready = (current_state == WRITE_BUFFER_ST) ? 1'b1 : 1'b0;
 
     always_ff @(posedge i_clk) begin : d_agu_wren_processing
         d_agu_wren <= agu_wren;
@@ -42,27 +46,27 @@ module fft_control #(
         end else begin 
             case (current_state)
                 IDLE_ST : 
-                    current_state <= FILL_BUFFER_ST;
+                    current_state <= WRITE_BUFFER_ST;
 
-                FILL_BUFFER_ST : 
+                WRITE_BUFFER_ST : 
                     if (i_tvalid) begin 
                         if (input_buffer_address < NFFT-1) begin 
                             current_state <= current_state;
                         end else begin 
-                            current_state <= LOAD_UNLOAD_ST;
+                            current_state <= READ_BUFFER_ST;
                         end 
                     end else begin 
                         current_state <= current_state;
                     end 
 
-                LOAD_UNLOAD_ST : 
+                READ_BUFFER_ST : 
                     if (input_buffer_address == NFFT-1) begin 
-                        current_state <= RUN_ST;
+                        current_state <= WORK_ST;
                     end else begin 
                         current_state <= current_state;
                     end 
 
-                RUN_ST : 
+                WORK_ST : 
                     if (agu_done) begin 
                         current_state <= HOLD_ST;
                     end else begin 
@@ -71,7 +75,7 @@ module fft_control #(
 
                 HOLD_ST :
                     if (hold_counter[4]) begin 
-                        current_state <= FILL_BUFFER_ST;
+                        current_state <= WRITE_BUFFER_ST;
                     end else begin 
                         current_state <= current_state; 
                     end 
@@ -89,7 +93,7 @@ module fft_control #(
 
             case (current_state)
 
-                FILL_BUFFER_ST : 
+                WRITE_BUFFER_ST : 
                     if (i_tvalid) begin 
                         if (input_buffer_address < NFFT-1) begin 
                             input_buffer_address <= input_buffer_address + 1;
@@ -100,7 +104,7 @@ module fft_control #(
                         input_buffer_address <= input_buffer_address;
                     end 
 
-                LOAD_UNLOAD_ST : 
+                READ_BUFFER_ST : 
                     if (input_buffer_address < NFFT-1) begin 
                         input_buffer_address <= input_buffer_address + 1;
                     end else begin 
@@ -137,7 +141,7 @@ module fft_control #(
             IDLE_ST : 
                 mem_select <= 1'b0;
 
-            RUN_ST : 
+            WORK_ST : 
                 if (~d_agu_wren & agu_wren) begin 
                     mem_select <= ~mem_select;
                 end else begin 
@@ -164,7 +168,7 @@ module fft_control #(
         end else begin 
 
             case (current_state)
-                LOAD_UNLOAD_ST : 
+                READ_BUFFER_ST : 
                     input_buffer_tvalid <= 1'b1;
 
                 default : 
